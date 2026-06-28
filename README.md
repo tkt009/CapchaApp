@@ -1,6 +1,4 @@
-## 🤖 Built with Claude Code
-
-### CAPTCHA Application
+### CAPTCHA Application built with Claude Code
 
 A dynamic CAPTCHA generator and solver built entirely with [Claude Code](https://claude.ai/code).
 Code merged and integrated using Claude Code.
