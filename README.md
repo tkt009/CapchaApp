@@ -3,10 +3,13 @@
 ### CAPTCHA Application
 
 A dynamic CAPTCHA generator and solver built entirely with [Claude Code](https://claude.ai/code).
+Code merged and integrated using Claude Code.
 
 **Features:**
 - Generates a new CAPTCHA challenge on every page refresh
 - Automatically deciphers and validates CAPTCHA input
+
+
 
 **Demo video link:** https://github.com/tkt009/CapchaApp/blob/main/Capcha_ClaudeCode.mov.zip
 
@@ -20,4 +23,4 @@ Ui upon deciphering
 
 
 ---
-*Code merged and integrated using Claude Code.*
+
