@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CAPTCHA App</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #f0f4f8;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    .card {
+      background: #ffffff;
+      border-radius: 12px;
+      padding: 40px 48px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 24px;
+      width: 360px;
+    }
+
+    h1 {
+      font-size: 22px;
+      color: #1a202c;
+      font-weight: 600;
+    }
+
+    .captcha-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    #captcha-canvas {
+      border: 2px solid #cbd5e0;
+      border-radius: 8px;
+      background: #edf2f7;
+    }
+
+    .refresh-btn {
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: #4a5568;
+      padding: 6px;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.2s, color 0.2s;
+    }
+
+    .refresh-btn:hover {
+      background: #e2e8f0;
+      color: #2d3748;
+    }
+
+    .refresh-btn svg {
+      width: 22px;
+      height: 22px;
+    }
+
+    .decipher-btn {
+      width: 100%;
+      padding: 12px;
+      background: #4299e1;
+      color: white;
+      font-size: 16px;
+      font-weight: 600;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .decipher-btn:hover {
+      background: #3182ce;
+    }
+
+    .decipher-btn:active {
+      background: #2b6cb0;
+    }
+
+    #answer-box {
+      width: 100%;
+      padding: 12px 14px;
+      font-size: 20px;
+      letter-spacing: 4px;
+      text-align: center;
+      border: 2px solid #cbd5e0;
+      border-radius: 8px;
+      color: #2d3748;
+      background: #f7fafc;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    #answer-box:focus {
+      border-color: #4299e1;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>CAPTCHA Verification</h1>
+
+    <div class="captcha-row">
+      <canvas id="captcha-canvas" width="200" height="60"></canvas>
+      <button class="refresh-btn" onclick="refresh()" title="Generate new CAPTCHA">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+          stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="23 4 23 10 17 10"></polyline>
+          <polyline points="1 20 1 14 7 14"></polyline>
+          <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+        </svg>
+      </button>
+    </div>
+
+    <button class="decipher-btn" onclick="decipher()">Decipher</button>
+
+    <input id="answer-box" type="text" placeholder="Answer appears here..." readonly />
+  </div>
+
+  <script>
+    let currentCaptcha = '';
+
+    function randomChar() {
+      const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789';
+      return chars[Math.floor(Math.random() * chars.length)];
+    }
+
+    function generateCaptchaText(length = 6) {
+      return Array.from({ length }, randomChar).join('');
+    }
+
+    function drawCaptcha(text) {
+      const canvas = document.getElementById('captcha-canvas');
+      const ctx = canvas.getContext('2d');
+      const w = canvas.width;
+      const h = canvas.height;
+
+      ctx.clearRect(0, 0, w, h);
+
+      // Background gradient
+      const grad = ctx.createLinearGradient(0, 0, w, h);
+      grad.addColorStop(0, '#dbeafe');
+      grad.addColorStop(1, '#e0e7ff');
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, w, h);
+
+      // Noise lines
+      for (let i = 0; i < 6; i++) {
+        ctx.beginPath();
+        ctx.moveTo(Math.random() * w, Math.random() * h);
+        ctx.lineTo(Math.random() * w, Math.random() * h);
+        ctx.strokeStyle = `rgba(${rand(100,180)},${rand(100,180)},${rand(200,240)},0.5)`;
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+      }
+
+      // Noise dots
+      for (let i = 0; i < 40; i++) {
+        ctx.beginPath();
+        ctx.arc(Math.random() * w, Math.random() * h, 1.2, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(100,120,200,0.3)`;
+        ctx.fill();
+      }
+
+      // Characters
+      const colors = ['#1a365d', '#2c5282', '#2a4365', '#553c9a', '#1d4044'];
+      const charSpacing = (w - 24) / text.length;
+
+      text.split('').forEach((ch, i) => {
+        ctx.save();
+        const x = 12 + i * charSpacing + charSpacing / 2;
+        const y = h / 2 + rand(-4, 6);
+        ctx.translate(x, y);
+        ctx.rotate((Math.random() - 0.5) * 0.4);
+        ctx.font = `bold ${rand(24, 30)}px 'Courier New', monospace`;
+        ctx.fillStyle = colors[Math.floor(Math.random() * colors.length)];
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(ch, 0, 0);
+        ctx.restore();
+      });
+    }
+
+    function rand(min, max) {
+      return Math.floor(Math.random() * (max - min + 1)) + min;
+    }
+
+    function refresh() {
+      currentCaptcha = generateCaptchaText();
+      drawCaptcha(currentCaptcha);
+      document.getElementById('answer-box').value = '';
+    }
+
+    function decipher() {
+      document.getElementById('answer-box').value = currentCaptcha;
+    }
+
+    // Init on load
+    refresh();
+  </script>
+</body>
+</html>
